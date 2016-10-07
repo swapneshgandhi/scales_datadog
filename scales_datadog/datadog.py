@@ -18,17 +18,19 @@ class DataDogPusher(object):
 
     """A class that pushes all stat values to DataDog on-demand."""
 
-    def __init__(self, api_key, api_application_key):
+    def __init__(self, api_key, api_application_key, host=None, device=None, tags=None):
         """If prefix is given, it will be prepended to all Graphite
         stats. If it is not given, then a prefix will be derived from the
         hostname."""
         from dogapi import dog_http_api
-        self.hostname = gethostname()
+        self.hostname = host if host is not None else gethostname()
         self.api = dog_http_api
         self.rules = []
         self.pruneRules = []
         self.api.api_key = api_key
         self.api.api_application_key = api_application_key
+        self.device = device
+        self.tags = tags
 
     def _sanitize(self, name):
         """Sanitize a name for datadog."""
@@ -96,7 +98,9 @@ class DataDogPusher(object):
                 metrics.append({
                     'metric': prefix + self._sanitize(name),
                     'points': [(now, value)],
-                    'host': self.hostname
+                    'host': self.hostname,
+                    'device': self.device,
+                    'tags': self.tags
                 })
         return metrics
 
